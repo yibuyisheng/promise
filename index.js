@@ -25,12 +25,16 @@ Promise.all = function() {
         for (var i = 0, il = promises.length; i < il; i++) {
             if (!(promises[i] instanceof Promise)) continue;
 
-            promises[i].then(function(data) {
-                results.push(data);
-                if (checkDone()) {
-                    resolve(results);
-                }
-            }).catch(function(error) {
+            promises[i].then((function(index) {
+                return function(data) {
+                    results[index] = data;
+                    promises[index]._isDone = true;
+
+                    if (checkDone()) {
+                        resolve(results);
+                    }
+                };
+            })(i)).catch(function(error) {
                 reject(error);
             });
         }
