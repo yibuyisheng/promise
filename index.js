@@ -2,12 +2,12 @@ function Promise(fn) {
     this._state = 'pending';
     if (fn instanceof Function) {
         try {
-            fn((function (promise) {
-                return function (obj) {
+            fn((function(promise) {
+                return function(obj) {
                     _resolve(promise, obj);
                 };
-            })(this), (function (promise) {
-                return function (obj) {
+            })(this), (function(promise) {
+                return function(obj) {
                     _reject(promise, obj);
                 };
             })(this));
@@ -17,7 +17,37 @@ function Promise(fn) {
     }
 }
 
-Promise.prototype.then = function (onFullFilled, onRejected) {
+Promise.all = function() {
+    var promises = arguments;
+
+    return new Promise(function(resolve, reject) {
+        var results = [];
+        for (var i = 0, il = promises.length; i < il; i++) {
+            if (!(promises[i] instanceof Promise)) continue;
+
+            promises[i].then(function(data) {
+                results.push(data);
+                if (checkDone()) {
+                    resolve(results);
+                }
+            }).catch(function(error) {
+                reject(error);
+            });
+        }
+    });
+
+    function checkDone() {
+        for (var i = 0, il = promises.length; i < il; i++) {
+            if (promises[i] instanceof Promise && !promises[i]._isDone) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+};
+
+Promise.prototype.then = function(onFullFilled, onRejected) {
     this._onFullFilled = onFullFilled;
     this._onRejected = onRejected;
 
