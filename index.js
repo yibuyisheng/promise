@@ -17,32 +17,61 @@ function Promise(fn) {
     }
 }
 
+Promise.reject = function(reason) {
+    return new Promise(function(resolve, reject) {
+        reject(reason);
+    });
+};
+
+Promise.resolve = function(value) {
+    return new Promise(function(resolve, reject) {
+        resolve(value);
+    });
+};
+
 Promise.all = function() {
-    var promises = arguments;
+    var args = arguments;
+    if (!args.length) {
+        return Promise.resolve();
+    }
+
+    var promises;
+    if (args[0] instanceof Array) {
+        promises = args[0];
+    } else {
+        promises = arguments;
+    }
 
     return new Promise(function(resolve, reject) {
         var results = [];
         for (var i = 0, il = promises.length; i < il; i++) {
-            if (!(promises[i] instanceof Promise)) continue;
+            var promise = promises[i];
 
-            promises[i].then((function(index) {
-                return function(data) {
-                    results[index] = data;
-                    promises[index]._isDone = true;
+            if (!(promise instanceof Promise)) {
+                promise = Promise.resolve(promise);
+            }
 
-                    if (checkDone()) {
-                        resolve(results);
-                    }
-                };
-            })(i)).catch(function(error) {
-                reject(error);
-            });
+            promise
+                .then((function(index, promise) {
+                    return function(data) {
+                        results[index] = data;
+                        promise._isDone = true;
+
+                        if (checkDone()) {
+                            resolve(results);
+                        }
+                    };
+                })(i, promise))
+                .catch(function(error) {
+                    reject(error);
+                });
         }
     });
 
     function checkDone() {
         for (var i = 0, il = promises.length; i < il; i++) {
-            if (promises[i] instanceof Promise && !promises[i]._isDone) {
+            var promise = promises[i];
+            if (!promise._isDone) {
                 return false;
             }
         }
