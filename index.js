@@ -146,11 +146,19 @@ function _reject(promise, obj) {
 }
 
 function _nextTick(fn, args) {
-    setTimeout((function (args) {
+    var handler = (function (args) {
         return function () {
             fn.apply(null, args);
         };
-    })(args), 0);
+    })(args);
+    
+    if (typeof process !== 'undefined' && process.nextTick) {
+        process.nextTick(handler);
+    } else if (typeof setImmediate !== 'undefined') {
+        setImmediate(handler);
+    } else {
+        setTimeout(handler, 0);   
+    }
 }
 
 module.exports = Promise;
