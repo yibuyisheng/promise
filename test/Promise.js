@@ -134,6 +134,22 @@ describe('Promise 测试', function () {
         });
     });
 
+    it.only('Promise 的静态方法 race', function (done) {
+        this.timeout(0);
+
+        var promise1 = new Promise(function (resolve) {
+            setTimeout(function () {
+                resolve(1);
+            }, 1000);
+        });
+        var promise2 = new Promise(function (resolve) {
+            resolve(2);
+        });
+        Promise.race([promise1, promise2]).then(function (result) {
+            shouldEqual(result === 2, done, done);
+        });
+    });
+
     function shouldEqual(statement, success, fail) {
         if (statement) {
             success && success();

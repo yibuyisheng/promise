@@ -89,6 +89,14 @@ export class Promise {
             }
         });
     }
+
+    static race(iterable) {
+        return new Promise(function (resolve, reject) {
+            for (let value of iterable) {
+                Promise.resolve(value).then(resolve, reject);
+            }
+        });
+    }
 }
 
 function isThenable(obj) {
