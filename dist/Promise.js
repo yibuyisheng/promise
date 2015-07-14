@@ -85,6 +85,44 @@ var Promise = (function () {
                 reject(value);
             });
         }
+    }, {
+        key: 'all',
+        value: function all(iterable) {
+            return new Promise(function (resolve, reject) {
+                var results = [];
+                var totalCount = 0;
+                var _iteratorNormalCompletion = true;
+                var _didIteratorError = false;
+                var _iteratorError = undefined;
+
+                try {
+                    for (var _iterator = iterable[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                        var value = _step.value;
+
+                        Promise.resolve(value).then((function (index, result) {
+                            results[index] = result;
+                            if (results.length === totalCount) {
+                                resolve(results);
+                            }
+                        }).bind(null, totalCount), reject);
+                        totalCount++;
+                    }
+                } catch (err) {
+                    _didIteratorError = true;
+                    _iteratorError = err;
+                } finally {
+                    try {
+                        if (!_iteratorNormalCompletion && _iterator['return']) {
+                            _iterator['return']();
+                        }
+                    } finally {
+                        if (_didIteratorError) {
+                            throw _iteratorError;
+                        }
+                    }
+                }
+            });
+        }
     }]);
 
     return Promise;

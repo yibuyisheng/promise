@@ -73,6 +73,22 @@ export class Promise {
             reject(value);
         });
     }
+
+    static all(iterable) {
+        return new Promise(function (resolve, reject) {
+            let results = [];
+            let totalCount = 0;
+            for (let value of iterable) {
+                Promise.resolve(value).then((function (index, result) {
+                    results[index] = result;
+                    if (results.length === totalCount) {
+                        resolve(results);
+                    }
+                }).bind(null, totalCount), reject);
+                totalCount++;
+            }
+        });
+    }
 }
 
 function isThenable(obj) {
@@ -81,6 +97,10 @@ function isThenable(obj) {
 
 function resolve(promise) {
     return function (value) {
+        if (promise.state !== 'pending') {
+            return;
+        }
+
         promise.state = 'resolved';
         promise.result = value;
         promise.fulfilledReactions.map(executeTask);
@@ -89,6 +109,10 @@ function resolve(promise) {
 
 function reject(promise) {
     return function (value) {
+        if (promise.state !== 'pending') {
+            return;
+        }
+
         promise.state = 'rejected';
         promise.result = value;
         promise.rejectedReactions.map(executeTask);

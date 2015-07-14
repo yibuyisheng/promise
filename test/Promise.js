@@ -93,6 +93,47 @@ describe('Promise 测试', function () {
         }, done);
     });
 
+    it('Promise 只能有一次变为稳定的过程', function (done) {
+        this.timeout(0);
+
+        new Promise(function (resolve, reject) {
+            resolve(1);
+            reject(2);
+        }).then(function (result) {
+            shouldEqual(result === 1, null, done);
+        }, function (result) {
+            done(new Error('Promise 只能有一次变为稳定的过程'));
+        }).then(done);
+    });
+
+    it('Promise 的静态方法 all', function (done) {
+        this.timeout(0);
+
+        var promise = new Promise(function (resolve, reject) {
+            resolve(1);
+        });
+        Promise.all([promise, 2, 3]).then(function (results) {
+            shouldEqual(results.length === 3, null, done);
+            shouldEqual(results[0] === 1, null, done);
+            shouldEqual(results[1] === 2, null, done);
+            shouldEqual(results[2] === 3, null, done);
+            done();
+        });
+    });
+
+    it('Promise 的静态方法 all ，异常', function (done) {
+        this.timeout(0);
+
+        var promise = new Promise(function (resolve, reject) {
+            reject(1);
+        });
+        Promise.all([promise, 2, 3]).then(function (results) {
+            done(new Error('错误执行路径'));
+        }, function (result) {
+            shouldEqual(result === 1, done, done);
+        });
+    });
+
     function shouldEqual(statement, success, fail) {
         if (statement) {
             success && success();
