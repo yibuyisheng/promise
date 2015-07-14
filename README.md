@@ -28,4 +28,6 @@ new Promise(function (resolve, reject) {
 
 # run the test code
 
+```
 npm test
+```
