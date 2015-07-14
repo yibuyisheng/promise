@@ -1,5 +1,7 @@
+var counter = 1;
 export class Promise {
     constructor(fn) {
+        this.counter = counter++;
         this.state = 'pending';
         this.fulfilledReactions = [];
         this.rejectedReactions = [];
@@ -11,47 +13,58 @@ export class Promise {
         let nextPromise = new Promise();
 
         if (this.state === 'pending') {
-            this.fulfilledReactions.push(fulfilledTask.bind(this));
-            this.rejectedReactions.push(rejectedTask.bind(this));
+            this.fulfilledReactions.push(fulfilledTask.bind(this)());
+            this.rejectedReactions.push(rejectedTask.bind(this)());
         } else if (this.state === 'resolved') {
-            executeTask(fulfilledTask.bind(this));
+            executeTask(fulfilledTask.bind(this)());
         } else if (this.state === 'rejected') {
-            executeTask(rejectedTask.bind(this));
+            executeTask(rejectedTask.bind(this)());
         }
 
         return nextPromise;
 
         function fulfilledTask() {
-            try {
-                let result = isFunction(onFulfilled)
-                    ? onFulfilled(this.result)
-                    : this.result;
+            return isFunction(onFulfilled)
+                ? task.bind(this, (result) => onFulfilled(result))
+                : task.bind(this, (result) => result);
 
-                if (isThenable(result)) {
-                    result.then(resolve(nextPromise), reject(nextPromise));
-                } else {
-                    resolve(nextPromise)(result);
+            function task(getResultFn) {
+                try {
+                    let result = getResultFn(this.result);
+                    if (isThenable(result)) {
+                        result.then(resolve(nextPromise), reject(nextPromise));
+                    } else {
+                        resolve(nextPromise)(result);
+                    }
+                } catch (error) {
+                    reject(nextPromise)(error);
                 }
-            } catch (error) {
-                reject(nextPromise)(error);
             }
         }
 
         function rejectedTask() {
-            try {
-                let result = isFunction(onRejected)
-                    ? onRejected(this.result)
-                    : this.result;
+            return isFunction(onRejected)
+                ? task.bind(this, (result) => onRejected(result), resolve)
+                : task.bind(this, (result) => result, reject);
 
-                if (isThenable(result)) {
-                    result.then(resolve(nextPromise), reject(nextPromise));
-                } else {
-                    resolve(nextPromise)(result);
+            function task(getResultFn, nextFun) {
+                try {
+                    let result = getResultFn(this.result);
+
+                    if (isThenable(result)) {
+                        result.then(resolve(nextPromise), reject(nextPromise));
+                    } else {
+                        nextFun(nextPromise)(result);
+                    }
+                } catch (error) {
+                    reject(nextPromise)(error);
                 }
-            } catch (error) {
-                reject(nextPromise)(error);
             }
         }
+    }
+
+    catch(onRejected) {
+        return this.then(null, onRejected);
     }
 
     static resolve(value) {

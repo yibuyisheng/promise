@@ -134,7 +134,7 @@ describe('Promise 测试', function () {
         });
     });
 
-    it.only('Promise 的静态方法 race', function (done) {
+    it('Promise 的静态方法 race', function (done) {
         this.timeout(0);
 
         var promise1 = new Promise(function (resolve) {
@@ -147,6 +147,18 @@ describe('Promise 测试', function () {
         });
         Promise.race([promise1, promise2]).then(function (result) {
             shouldEqual(result === 2, done, done);
+        });
+    });
+
+    it('Promise catch 方法', function (done) {
+        this.timeout(0);
+
+        new Promise(function (resolve, reject) {
+            reject(1);
+        }).then(function () {
+            done(new Error('错误执行流程'));
+        }).catch(function (result) {
+            shouldEqual(result === 1, done, done);
         });
     });
 

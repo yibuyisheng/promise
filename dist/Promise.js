@@ -8,10 +8,13 @@ var _createClass = (function () { function defineProperties(target, props) { for
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
+var counter = 1;
+
 var Promise = (function () {
     function Promise(fn) {
         _classCallCheck(this, Promise);
 
+        this.counter = counter++;
         this.state = 'pending';
         this.fulfilledReactions = [];
         this.rejectedReactions = [];
@@ -25,43 +28,63 @@ var Promise = (function () {
             var nextPromise = new Promise();
 
             if (this.state === 'pending') {
-                this.fulfilledReactions.push(fulfilledTask.bind(this));
-                this.rejectedReactions.push(rejectedTask.bind(this));
+                this.fulfilledReactions.push(fulfilledTask.bind(this)());
+                this.rejectedReactions.push(rejectedTask.bind(this)());
             } else if (this.state === 'resolved') {
-                executeTask(fulfilledTask.bind(this));
+                executeTask(fulfilledTask.bind(this)());
             } else if (this.state === 'rejected') {
-                executeTask(rejectedTask.bind(this));
+                executeTask(rejectedTask.bind(this)());
             }
 
             return nextPromise;
 
             function fulfilledTask() {
-                try {
-                    var result = isFunction(onFulfilled) ? onFulfilled(this.result) : this.result;
+                return isFunction(onFulfilled) ? task.bind(this, function (result) {
+                    return onFulfilled(result);
+                }) : task.bind(this, function (result) {
+                    return result;
+                });
 
-                    if (isThenable(result)) {
-                        result.then(resolve(nextPromise), reject(nextPromise));
-                    } else {
-                        resolve(nextPromise)(result);
+                function task(getResultFn) {
+                    try {
+                        var result = getResultFn(this.result);
+                        if (isThenable(result)) {
+                            result.then(resolve(nextPromise), reject(nextPromise));
+                        } else {
+                            resolve(nextPromise)(result);
+                        }
+                    } catch (error) {
+                        reject(nextPromise)(error);
                     }
-                } catch (error) {
-                    reject(nextPromise)(error);
                 }
             }
 
             function rejectedTask() {
-                try {
-                    var result = isFunction(onRejected) ? onRejected(this.result) : this.result;
+                return isFunction(onRejected) ? task.bind(this, function (result) {
+                    return onRejected(result);
+                }, resolve) : task.bind(this, function (result) {
+                    return result;
+                }, reject);
 
-                    if (isThenable(result)) {
-                        result.then(resolve(nextPromise), reject(nextPromise));
-                    } else {
-                        resolve(nextPromise)(result);
+                function task(getResultFn, nextFun) {
+                    try {
+                        var result = getResultFn(this.result);
+
+                        if (isThenable(result)) {
+                            result.then(resolve(nextPromise), reject(nextPromise));
+                        } else {
+                            nextFun(nextPromise)(result);
+                        }
+                    } catch (error) {
+                        reject(nextPromise)(error);
                     }
-                } catch (error) {
-                    reject(nextPromise)(error);
                 }
             }
+        }
+    }, {
+        key: 'catch',
+        value: function _catch(onRejected) {
+            return this.then(null, onRejected);
         }
     }], [{
         key: 'resolve',
