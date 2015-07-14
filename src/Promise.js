@@ -73,7 +73,7 @@ export class Promise {
             reject(value);
         });
     }
-};
+}
 
 function isThenable(obj) {
     return obj && isFunction(obj.then);
