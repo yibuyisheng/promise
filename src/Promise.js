@@ -1,7 +1,5 @@
-var counter = 1;
 export class Promise {
     constructor(fn) {
-        this.counter = counter++;
         this.state = 'pending';
         this.fulfilledReactions = [];
         this.rejectedReactions = [];
