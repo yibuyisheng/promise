@@ -81,10 +81,6 @@ function isThenable(obj) {
 
 function resolve(promise) {
     return function (value) {
-        if (promise.state !== 'pending') {
-            return;
-        }
-
         promise.state = 'resolved';
         promise.result = value;
         promise.fulfilledReactions.map(executeTask);
@@ -93,10 +89,6 @@ function resolve(promise) {
 
 function reject(promise) {
     return function (value) {
-        if (promise.state !== 'pending') {
-            return;
-        }
-
         promise.state = 'rejected';
         promise.result = value;
         promise.rejectedReactions.map(executeTask);
