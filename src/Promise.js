@@ -3,16 +3,19 @@ export class Promise {
         this.state = 'pending';
         this.fulfilledReactions = [];
         this.rejectedReactions = [];
+        this.notifyReactions = [];
 
-        isFunction(fn) && fn(resolve(this), reject(this));
+        isFunction(fn) && fn(resolve(this), reject(this), notify(this));
     }
 
-    then(onFulfilled, onRejected) {
+    then(onFulfilled, onRejected, onNotify) {
         let nextPromise = new Promise();
 
+        executeTask(notifyTask.bind(this)());
         if (this.state === 'pending') {
             this.fulfilledReactions.push(fulfilledTask.bind(this)());
             this.rejectedReactions.push(rejectedTask.bind(this)());
+            this.notifyReactions.push(notifyTask.bind(this)());
         } else if (this.state === 'resolved') {
             executeTask(fulfilledTask.bind(this)());
         } else if (this.state === 'rejected') {
@@ -20,6 +23,16 @@ export class Promise {
         }
 
         return nextPromise;
+
+        function notifyTask() {
+            if (isFunction(onNotify)) {
+                return () => {
+                    onNotify(this.result);
+                };
+            }
+
+            return function () {};
+        }
 
         function fulfilledTask() {
             return isFunction(onFulfilled)
@@ -116,7 +129,7 @@ function isThenable(obj) {
 
 function resolve(promise) {
     return function (value) {
-        if (promise.state !== 'pending') {
+        if (isSettled(promise)) {
             return;
         }
 
@@ -128,7 +141,7 @@ function resolve(promise) {
 
 function reject(promise) {
     return function (value) {
-        if (promise.state !== 'pending') {
+        if (isSettled(promise)) {
             return;
         }
 
@@ -136,6 +149,21 @@ function reject(promise) {
         promise.result = value;
         promise.rejectedReactions.map(executeTask);
     };
+}
+
+function notify(promise) {
+    return function (value) {
+        if (isSettled(promise)) {
+            return;
+        }
+
+        promise.result = value;
+        promise.notifyReactions.map(executeTask);
+    };
+}
+
+function isSettled(promise) {
+    return promise.state !== 'pending';
 }
 
 function isFunction(obj) {

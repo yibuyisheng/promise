@@ -4,34 +4,32 @@ Object.defineProperty(exports, '__esModule', {
     value: true
 });
 
-
-
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-var counter = 1;
 
 var Promise = (function () {
     function Promise(fn) {
         _classCallCheck(this, Promise);
 
-        this.counter = counter++;
         this.state = 'pending';
         this.fulfilledReactions = [];
         this.rejectedReactions = [];
+        this.notifyReactions = [];
 
-        isFunction(fn) && fn(resolve(this), reject(this));
+        isFunction(fn) && fn(resolve(this), reject(this), notify(this));
     }
 
     _createClass(Promise, [{
         key: 'then',
-        value: function then(onFulfilled, onRejected) {
+        value: function then(onFulfilled, onRejected, onNotify) {
             var nextPromise = new Promise();
 
+            executeTask(notifyTask.bind(this)());
             if (this.state === 'pending') {
                 this.fulfilledReactions.push(fulfilledTask.bind(this)());
                 this.rejectedReactions.push(rejectedTask.bind(this)());
+                this.notifyReactions.push(notifyTask.bind(this)());
             } else if (this.state === 'resolved') {
                 executeTask(fulfilledTask.bind(this)());
             } else if (this.state === 'rejected') {
@@ -39,6 +37,18 @@ var Promise = (function () {
             }
 
             return nextPromise;
+
+            function notifyTask() {
+                var _this = this;
+
+                if (isFunction(onNotify)) {
+                    return function () {
+                        onNotify(_this.result);
+                    };
+                }
+
+                return function () {};
+            }
 
             function fulfilledTask() {
                 return isFunction(onFulfilled) ? task.bind(this, function (result) {
@@ -191,7 +201,7 @@ function isThenable(obj) {
 
 function resolve(promise) {
     return function (value) {
-        if (promise.state !== 'pending') {
+        if (isSettled(promise)) {
             return;
         }
 
@@ -203,7 +213,7 @@ function resolve(promise) {
 
 function reject(promise) {
     return function (value) {
-        if (promise.state !== 'pending') {
+        if (isSettled(promise)) {
             return;
         }
 
@@ -211,6 +221,21 @@ function reject(promise) {
         promise.result = value;
         promise.rejectedReactions.map(executeTask);
     };
+}
+
+function notify(promise) {
+    return function (value) {
+        if (isSettled(promise)) {
+            return;
+        }
+
+        promise.result = value;
+        promise.notifyReactions.map(executeTask);
+    };
+}
+
+function isSettled(promise) {
+    return promise.state !== 'pending';
 }
 
 function isFunction(obj) {

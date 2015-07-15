@@ -1,5 +1,5 @@
 try {
-    module.exports = require('./dist/Promise');
+    module.exports = require('./dist/Promise').Promise;
 } catch (e) {
-    module.exports = require('./src/Promise');
+    module.exports = require('./src/Promise').Promise;
 }

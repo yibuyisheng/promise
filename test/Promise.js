@@ -162,6 +162,32 @@ describe('Promise 测试', function () {
         });
     });
 
+    it('Promise notify', function (done) {
+        this.timeout(0);
+
+        var arr = [];
+        new Promise(function (resolve, reject, notify) {
+            notify(1);
+            setTimeout(function () {
+                notify(2);
+            }, 10);
+            setTimeout(function () {
+                notify(3);
+            }, 20);
+            setTimeout(function () {
+                resolve(4);
+            }, 30);
+        }).then(function (result) {
+            shouldEqual(result === 4, null, done);
+            shouldEqual(arr.length === 3, null, done);
+            shouldEqual(arr[0] === 1, null, done);
+            shouldEqual(arr[1] === 2, null, done);
+            shouldEqual(arr[2] === 3, done, done);
+        }, null, function (result) {
+            arr.push(result);
+        });
+    });
+
     function shouldEqual(statement, success, fail) {
         if (statement) {
             success && success();
