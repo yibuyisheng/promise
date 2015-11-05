@@ -1,17 +1,21 @@
-export class Promise {
+'use strict';
+
+class Promise {
     constructor(fn) {
         this.state = 'pending';
         this.fulfilledReactions = [];
         this.rejectedReactions = [];
         this.notifyReactions = [];
 
-        isFunction(fn) && fn(resolve(this), reject(this), notify(this));
+        setTimeout(() => {
+            isFunction(fn) && fn(resolve(this), reject(this), notify(this));
+        });
     }
 
     then(onFulfilled, onRejected, onNotify) {
         let nextPromise = new Promise();
 
-        executeTask(notifyTask.bind(this)());
+        // executeTask(notifyTask.bind(this)());
         if (this.state === 'pending') {
             this.fulfilledReactions.push(fulfilledTask.bind(this)());
             this.rejectedReactions.push(rejectedTask.bind(this)());
@@ -27,6 +31,7 @@ export class Promise {
         function notifyTask() {
             if (isFunction(onNotify)) {
                 return () => {
+                    console.log(this.result);
                     onNotify(this.result);
                 };
             }
@@ -174,3 +179,4 @@ function executeTask(taskFn) {
     setTimeout(taskFn);
 }
 
+module.exports = Promise;
