@@ -7,15 +7,12 @@ class Promise {
         this.rejectedReactions = [];
         this.notifyReactions = [];
 
-        setTimeout(() => {
-            isFunction(fn) && fn(resolve(this), reject(this), notify(this));
-        });
+        isFunction(fn) && fn(resolve(this), reject(this), notify(this));
     }
 
     then(onFulfilled, onRejected, onNotify) {
         let nextPromise = new Promise();
 
-        // executeTask(notifyTask.bind(this)());
         if (this.state === 'pending') {
             this.fulfilledReactions.push(fulfilledTask.bind(this)());
             this.rejectedReactions.push(rejectedTask.bind(this)());
@@ -31,7 +28,6 @@ class Promise {
         function notifyTask() {
             if (isFunction(onNotify)) {
                 return () => {
-                    console.log(this.result);
                     onNotify(this.result);
                 };
             }

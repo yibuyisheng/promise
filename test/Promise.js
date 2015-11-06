@@ -167,7 +167,9 @@ describe('Promise 测试', function () {
 
         var arr = [];
         new Promise(function (resolve, reject, notify) {
-            notify(1);
+            setTimeout(function () {
+                notify(1);
+            }, 5);
             setTimeout(function () {
                 notify(2);
             }, 10);
