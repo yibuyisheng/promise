@@ -190,6 +190,20 @@ describe('Promise 测试', function () {
         });
     });
 
+    it.only('Promise 链式调用，异常会被第一个 catch 捕获住', function (done) {
+        new Promise(function (resolve, reject) {
+            throw new Error('error');
+        }).then(function () {
+            done(new Error('不应该进入这个分支'));
+        }).catch(function (error) {
+            shouldEqual(error.message === 'error', done);
+        }).then(function () {
+            done();
+        }).catch(function () {
+            done(new Error('不应该进入这个分支'));
+        });
+    });
+
     function shouldEqual(statement, success, fail) {
         if (statement) {
             success && success();

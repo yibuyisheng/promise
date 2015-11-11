@@ -7,7 +7,14 @@ class Promise {
         this.rejectedReactions = [];
         this.notifyReactions = [];
 
-        isFunction(fn) && fn(resolve(this), reject(this), notify(this));
+        if (isFunction(fn)) {
+            try {
+                fn(resolve(this), reject(this), notify(this));
+            }
+            catch (error) {
+                reject(this)(error);
+            }
+        }
     }
 
     then(onFulfilled, onRejected, onNotify) {
